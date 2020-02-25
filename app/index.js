@@ -2,7 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import PatternPreview from './components/PatternPreview'
 import AnswerBlocks from './components/AnswerBlocks'
-import GameOptions from './components/GameOptions'
+import GameInfo from './components/GameInfo'
 import Results from './components/Results'
 import './index.css'
 
@@ -14,7 +14,6 @@ class App extends React.Component {
       colors: [{ color: '#ff1100', id: 0 }, { color: '#0004ff', id: 1 }, { color: '#00ba28', id: 2 }, { color: '#fffb00', id: 3 }],
       pattern: [],
       answers: [],
-      difficulty: 4,
       firstLoad: true,
       gameResults: null,
       winner: null,
@@ -25,34 +24,31 @@ class App extends React.Component {
     this.handleAnswer = this.handleAnswer.bind(this)
     this.gameResult = this.gameResult.bind(this)
     this.resetGame = this.resetGame.bind(this)
-    this.setDifficulty = this.setDifficulty.bind(this)
-  }
-  setDifficulty(difficulty) {
-    this.setState({
-      difficulty
-    })
+    this.nextGame = this.nextGame.bind(this)
   }
   startGame() {
-    const pattern = [];
-    while (pattern.length < this.state.difficulty) {
+    // used a set to get 4 unique values
+    const pattern = new Set();
+    while (pattern.size < 4) {
       const randomNumber = Math.floor(Math.random() * 4)
-      pattern.push(randomNumber)
+      pattern.add(randomNumber)
     }
-    console.log(pattern)
     this.setState({
-      pattern: pattern,
+      pattern: Array.from(pattern),
       firstLoad: false
     })
   }
   handleAnswer(answer) {
+    // check game results if pattern length is equal to answers length
     if (this.state.pattern.length === this.state.answers.length + 1) {
       this.gameResult([...this.state.answers, answer])
+    } else {
+      this.setState(({ answers }) => {
+        return {
+          answers: [...answers, answer]
+        }
+      })
     }
-    this.setState(({ answers }) => {
-      return {
-        answers: [...answers, answer]
-      }
-    })
   }
   gameResult(answer) {
     if (JSON.stringify(this.state.pattern) === JSON.stringify(answer)) {
@@ -72,23 +68,43 @@ class App extends React.Component {
     }
   }
   resetGame() {
+    // used callback setState to make sure new game is initialized correctly
     this.setState({
       pattern: [],
       answers: [],
       gameResults: null,
       winner: null,
     }, () => {
-      this.startGame(this.state.difficulty)
+      this.startGame()
+    })
+  }
+  nextGame() {
+    // Make sure the last color in the pattern is not equal to the next one
+    let findNextColor = true
+    let nextColor = []
+    while (findNextColor) {
+      const randomNumber = Math.floor(Math.random() * 4)
+      if (randomNumber !== this.state.pattern[this.state.pattern.length - 1]) {
+        nextColor.push(randomNumber)
+        findNextColor = false
+      }
+    }
+    this.setState((prevState) => {
+      return {
+        pattern: [...prevState.pattern, ...nextColor],
+        answers: [],
+        gameResults: null,
+        winner: null
+      }
     })
   }
   render() {
     return (
       <div className='container'>
-        <GameOptions
+        <GameInfo
           firstLoad={this.state.firstLoad}
           difficulty={this.state.difficulty}
           startGame={this.startGame}
-          setDifficulty={this.setDifficulty}
           score={this.state.score}
         />
         <div className='game-board'>
@@ -111,6 +127,7 @@ class App extends React.Component {
           gameResults={this.state.gameResults}
           winner={this.state.winner}
           resetGame={this.resetGame}
+          nextGame={this.nextGame}
         />
       </div>
     )
