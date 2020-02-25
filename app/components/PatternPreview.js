@@ -3,14 +3,21 @@ import React from 'react'
 export default class PatternPreview extends React.Component {
   constructor(props) {
     super(props)
-
     this.state = {
-      backgroundColor: 'white'
+      backgroundColor: 'white',
+      patternNumber: 0
     }
     this.showPattern = this.showPattern.bind(this)
   }
-  componentDidMount() {
-    this.showPattern()
+  componentDidUpdate(prevProps) {
+    if (this.props.pattern.length) {
+      if (JSON.stringify(prevProps.pattern) !== JSON.stringify(this.props.pattern)) {
+        this.setState({
+          patternNumber: 0
+        })
+        this.showPattern()
+      }
+    }
   }
   showPattern() {
     let index = 0
@@ -19,8 +26,11 @@ export default class PatternPreview extends React.Component {
         clearInterval(this.timeout)
       }
       const backgroundColor = index === this.props.pattern.length ? 'white' : this.props.colors[this.props.pattern[index]].color
-      this.setState({
-        backgroundColor
+      this.setState((prevState) => {
+        return {
+          backgroundColor,
+          patternNumber: prevState.patternNumber === this.props.pattern.length ? '' : prevState.patternNumber + 1
+        }
       })
       index++
     }, 1000)
@@ -30,9 +40,13 @@ export default class PatternPreview extends React.Component {
       <div
         className='pattern-box'
         style={{
-          backgroundColor: this.state.backgroundColor
+          background: this.state.backgroundColor
         }}
-      ></div>
+      >
+        <div className='pattern-count'>
+          {this.state.patternNumber === 0 ? null : this.state.patternNumber}
+        </div>
+      </div>
     )
   }
 }

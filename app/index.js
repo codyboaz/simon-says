@@ -1,39 +1,47 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
-import './index.css'
 import PatternPreview from './components/PatternPreview'
 import AnswerBlocks from './components/AnswerBlocks'
-
-const colors = [{ color: 'red', id: 0 }, { color: 'blue', id: 1 }, { color: 'green', id: 2 }, { color: 'yellow', id: 3 }]
+import GameOptions from './components/GameOptions'
+import Results from './components/Results'
+import './index.css'
 
 class App extends React.Component {
   constructor(props) {
     super(props)
 
     this.state = {
+      colors: [{ color: '#ff1100', id: 0 }, { color: '#0004ff', id: 1 }, { color: '#00ba28', id: 2 }, { color: '#fffb00', id: 3 }],
       pattern: [],
       answers: [],
       difficulty: 4,
-      gameResults: null
+      firstLoad: true,
+      gameResults: null,
+      winner: null,
+      score: 0
     }
 
-    this.setPattern = this.setPattern.bind(this)
+    this.startGame = this.startGame.bind(this)
     this.handleAnswer = this.handleAnswer.bind(this)
     this.gameResult = this.gameResult.bind(this)
-
+    this.resetGame = this.resetGame.bind(this)
+    this.setDifficulty = this.setDifficulty.bind(this)
   }
-  componentDidMount() {
-    this.setPattern()
-  }
-  setPattern() {
-    const pattern = new Set;
-    while (pattern.size < this.state.difficulty) {
-      const randomNumber = Math.floor(Math.random() * this.state.difficulty)
-      pattern.add(randomNumber)
-    }
+  setDifficulty(difficulty) {
     this.setState({
-      pattern: Array.from(pattern),
-      loading: false
+      difficulty
+    })
+  }
+  startGame() {
+    const pattern = [];
+    while (pattern.length < this.state.difficulty) {
+      const randomNumber = Math.floor(Math.random() * 4)
+      pattern.push(randomNumber)
+    }
+    console.log(pattern)
+    this.setState({
+      pattern: pattern,
+      firstLoad: false
     })
   }
   handleAnswer(answer) {
@@ -48,31 +56,62 @@ class App extends React.Component {
   }
   gameResult(answer) {
     if (JSON.stringify(this.state.pattern) === JSON.stringify(answer)) {
-      this.setState({
-        gameResults: 'Congrats!'
+      this.setState((prevState) => {
+        return {
+          gameResults: 'Congrats!',
+          winner: true,
+          score: prevState.score + 1
+        }
       })
     } else {
       this.setState({
-        gameResults: 'Sorry, try again!'
+        gameResults: 'Sorry, try again!',
+        winner: false,
+        score: 0
       })
     }
+  }
+  resetGame() {
+    this.setState({
+      pattern: [],
+      answers: [],
+      gameResults: null,
+      winner: null,
+    }, () => {
+      this.startGame(this.state.difficulty)
+    })
   }
   render() {
     return (
       <div className='container'>
+        <GameOptions
+          firstLoad={this.state.firstLoad}
+          difficulty={this.state.difficulty}
+          startGame={this.startGame}
+          setDifficulty={this.setDifficulty}
+          score={this.state.score}
+        />
         <div className='game-board'>
           <div className='pattern-section'>
-            <PatternPreview pattern={this.state.pattern} colors={colors} />
+            <PatternPreview
+              pattern={this.state.pattern}
+              colors={this.state.colors}
+              score={this.state.score}
+              winner={this.state.winner}
+            />
           </div>
           <div className='answer-section'>
-            <AnswerBlocks colors={colors} handleAnswer={this.handleAnswer} />
+            <AnswerBlocks
+              handleAnswer={this.handleAnswer}
+              colors={this.state.colors}
+            />
           </div>
         </div>
-        {this.state.gameResults && (
-          <div className='results'>
-            {this.state.gameResults}
-          </div>
-        )}
+        <Results
+          gameResults={this.state.gameResults}
+          winner={this.state.winner}
+          resetGame={this.resetGame}
+        />
       </div>
     )
   }
