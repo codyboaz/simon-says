@@ -1,10 +1,11 @@
 {
   "name": "simon-says",
   "version": "1.0.0",
-  "description": "",
+  "description": "Simon Says Game",
   "main": "index.js",
   "scripts": {
-    "start": "webpack-dev-server"
+    "start": "webpack-dev-server",
+    "build": "NODE_END='production' webpack"
   },
   "babel": {
     "presets": [
@@ -13,7 +14,7 @@
     ]
   },
   "keywords": [],
-  "author": "",
+  "author": "Cody Boaz",
   "license": "ISC",
   "dependencies": {
     "react": "^16.12.0",
